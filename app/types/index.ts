@@ -6,8 +6,8 @@ export interface ArchivePhoto {
   photog?: string;
   photogKey?: string;
   date?: string;
-  sessionKey?: string;
-  eraId?: string;
+  eraTitle?: string;
+  eraOrigin?: string;
 }
 
 export interface EraItem {
