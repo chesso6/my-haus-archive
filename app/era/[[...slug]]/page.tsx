@@ -24,7 +24,7 @@ interface PageProps {
   params: Promise<{ slug?: string[] }>;
 }
 
-const OWNER_PASSWORD = process.env.NEXT_PUBLIC_OWNER_PASSWORD || 'HAUSOFGAGA';
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'HAUSOFGAGA';
 
 const ERAS_LIST = [
   { id: 'thefame', title: 'The Fame' },
@@ -73,8 +73,35 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
   useEffect(() => {
     const ownerMode = sessionStorage.getItem('haus_owner_mode') === 'true';
     const editorName = sessionStorage.getItem('haus_editor_name');
-    setIsOwner(ownerMode);
-    setIsEditor(!ownerMode && Boolean(editorName));
+
+    if (ownerMode) {
+      setIsOwner(true);
+      setIsEditor(false);
+    } else if (editorName && database) {
+      get(ref(database, 'hausEditors'))
+        .then((snap) => {
+          const editors = snap.val() || {};
+          const isValidEditor = Object.values(editors).some(
+            (e: any) => e.name.toLowerCase() === editorName.toLowerCase()
+          );
+
+          if (isValidEditor) {
+            setIsEditor(true);
+            setIsOwner(false);
+          } else {
+            sessionStorage.removeItem('haus_editor_name');
+            setIsEditor(false);
+            setIsOwner(false);
+          }
+        })
+        .catch(() => {
+          setIsEditor(false);
+          setIsOwner(false);
+        });
+    } else {
+      setIsOwner(false);
+      setIsEditor(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -128,6 +155,8 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
       setIsOwner(true);
       setIsEditor(false);
       setShowLoginModal(false);
+      setLoginName('');
+      setLoginPass('');
       return;
     }
 
@@ -151,8 +180,10 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
         setIsOwner(false);
         setIsEditor(true);
         setShowLoginModal(false);
+        setLoginName('');
+        setLoginPass('');
       } else {
-        setLoginError('UNAUTHORIZED');
+        setLoginError('UNAUTHORIZED ACCESS');
       }
     } catch {
       setLoginError('LOGIN FAILED');
@@ -280,7 +311,7 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
             <div className="bg-neutral-900 border border-neutral-800 rounded-2xl max-w-sm w-full p-6 space-y-4">
               <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
                 <span className="text-xs bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded font-bold tracking-widest">
-                  ACCESS
+                  SECURE ACCESS
                 </span>
                 <h2 className="text-sm font-bold text-white uppercase tracking-widest">
                   Login
@@ -288,58 +319,65 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
                 <button
                   type="button"
                   onClick={() => setShowLoginModal(false)}
-                  className="text-neutral-400 hover:text-white"
+                  className="text-neutral-400 hover:text-white cursor-pointer"
                 >
                   ×
                 </button>
               </div>
 
-              <div className="space-y-3 text-xs">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleLogin();
+                }}
+                className="space-y-3 text-xs"
+              >
                 <div>
-                  <label className="block text-neutral-400 mb-1">Name</label>
+                  <label className="block text-neutral-400 mb-1">Name Key</label>
                   <input
-                    type="text"
+                    type="password"
+                    autoComplete="new-password"
                     value={loginName}
                     onChange={(e) => setLoginName(e.target.value)}
-                    className="w-full bg-black border border-neutral-800 rounded p-2 text-white"
-                    placeholder="Your name"
+                    className="w-full bg-black border border-neutral-800 rounded p-2 text-white focus:outline-none focus:border-orange-500"
+                    placeholder="••••••••"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-neutral-400 mb-1">Password</label>
+                  <label className="block text-neutral-400 mb-1">Access Password</label>
                   <input
                     type="password"
+                    autoComplete="new-password"
                     value={loginPass}
                     onChange={(e) => setLoginPass(e.target.value)}
-                    className="w-full bg-black border border-neutral-800 rounded p-2 text-white"
+                    className="w-full bg-black border border-neutral-800 rounded p-2 text-white focus:outline-none focus:border-orange-500"
                     placeholder="••••••••"
                   />
                 </div>
 
                 {loginError && (
-                  <p className="text-rose-500 text-[11px] font-bold tracking-widest">
+                  <p className="text-rose-500 text-[11px] font-bold tracking-widest uppercase">
                     {loginError}
                   </p>
                 )}
-              </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800">
-                <button
-                  type="button"
-                  onClick={() => setShowLoginModal(false)}
-                  className="px-4 py-2 bg-neutral-800 text-neutral-300 rounded text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogin}
-                  className="px-4 py-2 bg-white text-black font-bold rounded text-xs hover:bg-neutral-200"
-                >
-                  Enter
-                </button>
-              </div>
+                <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginModal(false)}
+                    className="px-4 py-2 bg-neutral-800 text-neutral-300 rounded text-xs font-bold hover:bg-neutral-700 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-white text-black font-bold rounded text-xs hover:bg-neutral-200 cursor-pointer"
+                  >
+                    Enter
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
