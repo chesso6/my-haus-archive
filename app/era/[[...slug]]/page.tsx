@@ -2,8 +2,6 @@
 
 import { useState, useEffect, use, Suspense } from 'react';
 import Link from 'next/link';
-import { ref, get } from 'firebase/database';
-import { database } from '@/app/lib/firebase';
 import { Lightbox } from '@/app/components/Lightbox';
 import { Sidebar } from '@/app/components/Sidebar';
 
@@ -23,8 +21,6 @@ import { ArchivePhoto } from '@/app/types';
 interface PageProps {
   params: Promise<{ slug?: string[] }>;
 }
-
-const OWNER_PASSWORD = process.env.OWNER_PASSWORD || 'HAUSOFGAGA';
 
 const ERAS_LIST = [
   { id: 'thefame', title: 'The Fame' },
@@ -77,27 +73,9 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
     if (ownerMode) {
       setIsOwner(true);
       setIsEditor(false);
-    } else if (editorName && database) {
-      get(ref(database, 'hausEditors'))
-        .then((snap) => {
-          const editors = snap.val() || {};
-          const isValidEditor = Object.values(editors).some(
-            (e: any) => e.name.toLowerCase() === editorName.toLowerCase()
-          );
-
-          if (isValidEditor) {
-            setIsEditor(true);
-            setIsOwner(false);
-          } else {
-            sessionStorage.removeItem('haus_editor_name');
-            setIsEditor(false);
-            setIsOwner(false);
-          }
-        })
-        .catch(() => {
-          setIsEditor(false);
-          setIsOwner(false);
-        });
+    } else if (editorName) {
+      setIsEditor(true);
+      setIsOwner(false);
     } else {
       setIsOwner(false);
       setIsEditor(false);
@@ -149,41 +127,37 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
     const nameVal = loginName.trim();
     const passVal = loginPass.trim();
 
-    if (passVal.toUpperCase() === OWNER_PASSWORD.toUpperCase()) {
-      sessionStorage.setItem('haus_owner_mode', 'true');
-      sessionStorage.removeItem('haus_editor_name');
-      setIsOwner(true);
-      setIsEditor(false);
-      setShowLoginModal(false);
-      setLoginName('');
-      setLoginPass('');
-      return;
-    }
-
-    if (!database) {
-      setLoginError('NO CONNECTION');
+    if (!passVal) {
+      setLoginError('PASSWORD REQUIRED');
       return;
     }
 
     try {
-      const snap = await get(ref(database, 'hausEditors'));
-      const editors = snap.val() || {};
-      const match = Object.values(editors).find(
-        (e: any) =>
-          e.password === passVal &&
-          e.name.toLowerCase() === nameVal.toLowerCase()
-      );
+      const res = await fetch('/api/verify-editor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameVal, password: passVal }),
+      });
 
-      if (match) {
-        sessionStorage.setItem('haus_editor_name', (match as any).name);
-        sessionStorage.removeItem('haus_owner_mode');
-        setIsOwner(false);
-        setIsEditor(true);
+      const data = await res.json();
+
+      if (data.success) {
+        if (data.role === 'owner') {
+          sessionStorage.setItem('haus_owner_mode', 'true');
+          sessionStorage.removeItem('haus_editor_name');
+          setIsOwner(true);
+          setIsEditor(false);
+        } else if (data.role === 'editor') {
+          sessionStorage.setItem('haus_editor_name', data.editorName);
+          sessionStorage.removeItem('haus_owner_mode');
+          setIsOwner(false);
+          setIsEditor(true);
+        }
         setShowLoginModal(false);
         setLoginName('');
         setLoginPass('');
       } else {
-        setLoginError('UNAUTHORIZED ACCESS');
+        setLoginError(data.message || 'UNAUTHORIZED ACCESS');
       }
     } catch {
       setLoginError('LOGIN FAILED');
@@ -333,7 +307,7 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
                 className="space-y-3 text-xs"
               >
                 <div>
-                  <label className="block text-neutral-400 mb-1">Name Key</label>
+                  <label className="block text-neutral-400 mb-1">Name Key (Optional for Owner)</label>
                   <input
                     type="password"
                     autoComplete="new-password"
