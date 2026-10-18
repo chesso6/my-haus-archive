@@ -71,7 +71,13 @@ export async function GET(
 
     const fullSessionGroups: Record<string, any[]> = {};
     formattedPhotos.forEach((photo) => {
-      const sKey = getSessionKey(photo);
+      let sKey = getSessionKey(photo);
+
+      const year = photo.year || photo.photoYear || photo.dateYear;
+      if (year && !sKey.includes(String(year))) {
+        sKey = `${sKey}, ${year}`;
+      }
+
       if (!fullSessionGroups[sKey]) fullSessionGroups[sKey] = [];
       fullSessionGroups[sKey].push(photo);
     });

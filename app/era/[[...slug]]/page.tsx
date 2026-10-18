@@ -179,7 +179,6 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
     return isNaN(fallbackParsed) ? 0 : fallbackParsed;
   };
 
-  // Sinisiguradong descending order din ang keys sa frontend
   const currentContainerKeys = Object.keys(sessionGroups).sort((a, b) => {
     return parseDateForSort(b) - parseDateForSort(a);
   });
@@ -241,17 +240,25 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
           </div>
         ) : (
           <div className="space-y-12 max-w-7xl mx-auto">
-            {currentContainerKeys.map((sessionKey) => (
-              <PhotoContainer
-                key={sessionKey}
-                eraId={eraId}
-                sessionKey={sessionKey}
-                photos={sessionGroups[sessionKey] || []}
-                allPhotos={allPhotos}
-                isOwner={isOwner}
-                onSelectPhoto={(idx) => setSelectedPhotoIndex(idx)}
-              />
-            ))}
+            {currentContainerKeys.map((sessionKey) => {
+              const firstPhotoInGroup = sessionGroups[sessionKey]?.[0];
+              const yearVal = firstPhotoInGroup?.year || firstPhotoInGroup?.photoYear;
+              const formattedDisplayKey = yearVal && !sessionKey.includes(String(yearVal))
+                ? `${sessionKey}, ${yearVal}`
+                : sessionKey;
+
+              return (
+                <PhotoContainer
+                  key={sessionKey}
+                  eraId={eraId}
+                  sessionKey={formattedDisplayKey}
+                  photos={sessionGroups[sessionKey] || []}
+                  allPhotos={allPhotos}
+                  isOwner={isOwner}
+                  onSelectPhoto={(idx) => setSelectedPhotoIndex(idx)}
+                />
+              );
+            })}
 
             <ContainerPagination
               currentPage={mainPage}

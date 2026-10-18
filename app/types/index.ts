@@ -6,6 +6,8 @@ export interface ArchivePhoto {
   photog?: string;
   photogKey?: string;
   date?: string;
+  year?: string | number;
+  photoYear?: string | number;
   eraTitle?: string;
   eraOrigin?: string;
 }
