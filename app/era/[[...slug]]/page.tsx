@@ -39,7 +39,10 @@ const ERAS_LIST = [
   { id: 'mayhem', title: 'Mayhem' },
 ];
 
-function EraExhibitionContent({ slug = [] }: { slug: string[] }) {
+function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['params'] }) {
+  const resolvedParams = use(paramsPromise);
+  const slug = resolvedParams?.slug || [];
+
   const eraId = slug[0] || 'artpop';
   const targetPhotoIndex = slug[3] ? parseInt(slug[3], 10) - 1 : null;
 
@@ -346,12 +349,9 @@ function EraExhibitionContent({ slug = [] }: { slug: string[] }) {
 }
 
 export default function EraExhibitionPage({ params }: PageProps) {
-  const resolvedParams = use(params);
-  const slug = resolvedParams?.slug || [];
-
   return (
     <Suspense fallback={<ContainerListSkeleton />}>
-      <EraExhibitionContent slug={slug} />
+      <EraExhibitionContent paramsPromise={params} />
     </Suspense>
   );
 }
