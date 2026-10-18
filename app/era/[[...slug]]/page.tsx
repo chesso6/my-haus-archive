@@ -1,7 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect, use, Suspense } from 'react';
 import Link from 'next/link';
 import { ref, get } from 'firebase/database';
