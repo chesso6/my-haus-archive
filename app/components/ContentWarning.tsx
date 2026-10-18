@@ -16,6 +16,14 @@ export function ContentWarning() {
     setShow(false);
   };
 
+  const handleLeave = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = 'https://www.google.com';
+    }
+  };
+
   if (!show) return null;
 
   return (
@@ -49,7 +57,7 @@ export function ContentWarning() {
           </button>
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={handleLeave}
             className="w-full py-2 bg-transparent text-neutral-500 font-bold text-xs uppercase tracking-widest hover:text-white transition-all cursor-pointer"
           >
             LEAVE
