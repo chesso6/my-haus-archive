@@ -13,7 +13,7 @@ interface PhotoContainerProps {
   photos: ArchivePhoto[];
   allPhotos: ArchivePhoto[];
   isOwner?: boolean;
-  onSelectPhoto: (globalIndex: number) => void;
+  onSelectPhoto: (globalIndex: string) => void;
 }
 
 const PHOTOS_PER_PAGE = 10;
@@ -133,7 +133,9 @@ export function PhotoContainer({
               return (
                 <div
                   key={photo.url + index}
-                  onClick={() => onSelectPhoto(globalIdx !== -1 ? globalIdx : 0)}
+                  onClick={() => {
+                    onSelectPhoto(photo.id || photo.url);
+                  }}
                   className="group relative aspect-square bg-neutral-900 rounded-xl overflow-hidden cursor-pointer border border-neutral-800/80 hover:border-orange-500 transition-all duration-150 shadow-md transform-gpu will-change-transform"
                 >
                   {!isImageLoaded && (

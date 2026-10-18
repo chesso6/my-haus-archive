@@ -242,10 +242,12 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
           <div className="space-y-12 max-w-7xl mx-auto">
             {currentContainerKeys.map((sessionKey) => {
               const firstPhotoInGroup = sessionGroups[sessionKey]?.[0] as any;
-              const yearVal = firstPhotoInGroup?.year || firstPhotoInGroup?.photoYear || firstPhotoInGroup?.dateYear;
-              const formattedDisplayKey = yearVal && !sessionKey.includes(String(yearVal))
-                ? `${sessionKey}, ${yearVal}`
-                : sessionKey;
+              const photoYear = firstPhotoInGroup?.year || firstPhotoInGroup?.photoYear || firstPhotoInGroup?.dateYear;
+              const displayYear = photoYear || (firstPhotoInGroup?.date && firstPhotoInGroup.date.match(/\d{4}/)?.[0]) || '2012';
+
+              const formattedDisplayKey = sessionKey.includes(String(displayYear))
+                ? sessionKey
+                : `${sessionKey}, ${displayYear}`;
 
               return (
                 <PhotoContainer
@@ -255,7 +257,12 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
                   photos={sessionGroups[sessionKey] || []}
                   allPhotos={allPhotos}
                   isOwner={isOwner}
-                  onSelectPhoto={(idx) => setSelectedPhotoIndex(idx)}
+                  onSelectPhoto={(targetIdentifier) => {
+                    const realIndex = allPhotos.findIndex(
+                      (p) => p.id === targetIdentifier || p.url === targetIdentifier
+                    );
+                    setSelectedPhotoIndex(realIndex !== -1 ? realIndex : 0);
+                  }}
                 />
               );
             })}
