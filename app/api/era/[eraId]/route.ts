@@ -7,7 +7,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ eraId: string }> }
 ) {
-  const { eraId } = await params;
+    { eraId } = await params;
   const { searchParams } = new URL(request.url);
 
   const containerPage = parseInt(searchParams.get('page') || '1', 10);

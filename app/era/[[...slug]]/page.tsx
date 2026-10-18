@@ -241,8 +241,8 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
         ) : (
           <div className="space-y-12 max-w-7xl mx-auto">
             {currentContainerKeys.map((sessionKey) => {
-              const firstPhotoInGroup = sessionGroups[sessionKey]?.[0];
-              const yearVal = firstPhotoInGroup?.year || firstPhotoInGroup?.photoYear;
+              const firstPhotoInGroup = sessionGroups[sessionKey]?.[0] as any;
+              const yearVal = firstPhotoInGroup?.year || firstPhotoInGroup?.photoYear || firstPhotoInGroup?.dateYear;
               const formattedDisplayKey = yearVal && !sessionKey.includes(String(yearVal))
                 ? `${sessionKey}, ${yearVal}`
                 : sessionKey;
