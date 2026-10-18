@@ -171,7 +171,18 @@ function EraExhibitionContent({ paramsPromise }: { paramsPromise: PageProps['par
     setIsEditor(false);
   };
 
-  const currentContainerKeys = Object.keys(sessionGroups);
+  const parseDateForSort = (dateStr: string) => {
+    const parsed = Date.parse(dateStr);
+    if (!isNaN(parsed)) return parsed;
+    const currentYear = new Date().getFullYear();
+    const fallbackParsed = Date.parse(`${dateStr} ${currentYear}`);
+    return isNaN(fallbackParsed) ? 0 : fallbackParsed;
+  };
+
+  // Sinisiguradong descending order din ang keys sa frontend
+  const currentContainerKeys = Object.keys(sessionGroups).sort((a, b) => {
+    return parseDateForSort(b) - parseDateForSort(a);
+  });
 
   return (
     <div className="flex min-h-screen bg-black/60 text-white font-mono">

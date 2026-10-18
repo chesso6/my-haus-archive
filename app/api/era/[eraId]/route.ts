@@ -76,7 +76,18 @@ export async function GET(
       fullSessionGroups[sKey].push(photo);
     });
 
-    const allContainerKeys = Object.keys(fullSessionGroups);
+    const parseDateForSort = (dateStr: string) => {
+      const parsed = Date.parse(dateStr);
+      if (!isNaN(parsed)) return parsed;
+      const currentYear = new Date().getFullYear();
+      const fallbackParsed = Date.parse(`${dateStr} ${currentYear}`);
+      return isNaN(fallbackParsed) ? 0 : fallbackParsed;
+    };
+
+    const allContainerKeys = Object.keys(fullSessionGroups).sort((a, b) => {
+      return parseDateForSort(b) - parseDateForSort(a);
+    });
+
     const totalContainerPages = Math.ceil(allContainerKeys.length / containersPerPage) || 1;
 
     const startIdx = (containerPage - 1) * containersPerPage;
